@@ -1,9 +1,9 @@
-import { engine } from "./engine.mjs";
+import { engine} from "./engine.mjs";
 import * as THREE from "three";
 import { createBall, ballMesh, ballBody } from "./ball.mjs";
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-let cameraController = null; // reserve a variable for OrbitControls instance, we use null to say “empty for now” we will asign it later
+let cameraController = null; //we use null to say “empty for now” we will asign it later
 
 //light
 function initLight() {
@@ -26,7 +26,7 @@ function initGame() {
     initCamera();
     initLight();
 
-    createBall(0, 30, 0);    // Creates the ball
+    createBall(0, 20, 0);    // Creates the ball
 
 
     // OrbitControls for camera rotation and zoom

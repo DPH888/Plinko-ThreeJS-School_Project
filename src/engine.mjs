@@ -1,56 +1,88 @@
 import * as THREE from "three";
 import * as CANNON from "cannon-es";
 
-// Scene, camera, renderer
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-camera.position.set(0, 0, 40);
-camera.lookAt(0, 0, 0);
+let engine = {
+    init: initEngine,     // method to initialize the engine
+    update: () => {},
+    updateTime: 10,      // milliseconds between each `engine.update()` call, smaller = faster game logic updates, larger = slower updates
+    scene: null,      //THREE.js scene  //we use null to say “empty for now” we will asign it later
+    camera: null,    // THREE.js camera
+    renderer: null,      // WebGL renderer: draws the scene using GPU acceleration
+    world: null,       // Cannon.js physics world
 
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
+    randomInteger(min, max) { // returns a random integer between min and max 
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+};
+    // Sets up Three.js scene, camera, renderer, and Cannon.js physics
+function initThreeAndPhysics() {
+    engine.scene = new THREE.Scene(); // main container for all 3D objects
 
-// Physics world
-const world = new CANNON.World({
-    gravity: new CANNON.Vec3(0, -10, 0) // gravity along -Y
-});
+    engine.camera = new THREE.PerspectiveCamera(
+        75,                                         // FOV in degrees
+        window.innerWidth / window.innerHeight,         // aspect ratio of browser window
+        0.1,                                //  minimum render distance:: objects closer than this won't appear
+        1000                                 //   maximum render distance:: objects farther than this won't appea
+    );
+    //Renderer
+    engine.renderer = new THREE.WebGLRenderer({ antialias: true });  // GPU-accelerated canvas
+    engine.renderer.setSize(window.innerWidth, window.innerHeight);   // full window
+    document.body.appendChild(engine.renderer.domElement); // // attach canvas to webpage
 
-// Simple ground so ball doesn't fall forever
-const groundBody = new CANNON.Body({
-    type: CANNON.Body.STATIC,
-    shape: new CANNON.Plane(),
-});
-groundBody.quaternion.setFromEuler(-Math.PI/2, 0, 0); // rotate plane to horizontal
-world.addBody(groundBody);
+    // Physics world
+    engine.world = new CANNON.World();
+    engine.world.gravity.set(0, -3, 0); // downward gravity
+     /*
+      Broadphase is the first step of collision detection.
+      Cannon.js checks for which bodies might collide before doing precise calculations.
+      SAPBroadphase (Sweep and Prune) is efficient for many objects.
+     */
+    engine.world.broadphase = new CANNON.SAPBroadphase(engine.world);
 
-// Engine update loop
-function update() {
-    world.step(1/60); // step physics
-
-    // Sync meshes with physics bodies
-    scene.traverse(obj => {
-        if (obj.userData.body) {
-            obj.position.copy(obj.userData.body.position);
-            obj.quaternion.copy(obj.userData.body.quaternion);
+    // ground 
+    const ground = new CANNON.Body({
+        type: CANNON.Body.STATIC,           // does not move
+        shape: new CANNON.Plane()           // flat horizontal plane
+    });
+    ground.quaternion.setFromEuler(-Math.PI / 2, 0, 0); // rotate to horizontal
+    engine.world.addBody(ground);
+}
+            // Render loop: updates physics and draws the scene every frame
+function renderLoop() {
+    engine.world.step(1 / 60); // physics step at 60 Hz
+      /*
+      traverse() goes through every object in the scene 
+      object.userData.body -> if the object has a physics body associated
+      position.copy() -> copies physics body position to the mesh
+      quaternion.copy()-> copies physics body rotation to the mesh
+      This keeps the 3D visual representation exactly aligned with physics simulation.
+     */
+    engine.scene.traverse(object => {
+        if (object.userData.body) {
+            object.position.copy(object.userData.body.position);
+            object.quaternion.copy(object.userData.body.quaternion);
         }
     });
-
-    renderer.render(scene, camera);
-    requestAnimationFrame(update);
+         //Render Scene
+    engine.renderer.render(engine.scene, engine.camera);     // Draws the scene from the perspective of the camera this sends commands to the GPU to render objects to the canvas#
+    /*
+      requestAnimationFrame tells the browser:
+      "Call this function before the next screen repaint"
+      This makes rendering smooth and synced with monitor refresh rate (~60 FPS)
+     */
+    requestAnimationFrame(renderLoop);
 }
-
-// Minimal engine init function
+            //Initializes engine and starts render + update loops
 function initEngine() {
-    console.log("Engine initialized!");
-    update();
+    initThreeAndPhysics();   // creates scene, camera, renderer, physics world
+    window.engine = engine;     //This allows the engine’s variables to be used in other files or the console.”
+    renderLoop();           // start visual render loop 
+        /*
+     * Start the logic update loop
+     * setInterval calls engine.update() every updateTime milliseconds
+     * This loop handles game logic, physics adjustments, camera follow, etc.
+     */
+    setInterval(() => engine.update(), engine.updateTime); 
 }
 
-export const engine = {
-    scene,
-    camera,
-    renderer,
-    world,
-    update,
-    init: initEngine
-};
+export { engine };
