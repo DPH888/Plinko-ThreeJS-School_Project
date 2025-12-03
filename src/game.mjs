@@ -1,19 +1,13 @@
-import { engine} from "./engine.mjs";
+import { engine } from "./engine.mjs";
 import * as THREE from "three";
+import * as CANNON from "cannon-es";
 import { createBall, ballMesh, ballBody } from "./ball.mjs";
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-
+import { createGround } from "./ground.mjs"
+import { initLights } from "./lights.mjs"
 let cameraController = null; //we use null to say “empty for now” we will asign it later
 
 //light
-function initLight() {
-    const light = new THREE.DirectionalLight(0xffffff, 1.5);
-    light.position.set(10, 30, 20);  // position in space
-    light.lookAt(0, 0, 0);           // point toward center of scene
-
-    light.castShadow = true;   // enables shadows
-    engine.scene.add(light);
-}
 
 // --- Camera ---
 function initCamera() {
@@ -24,9 +18,11 @@ function initCamera() {
 // --- Game ---
 function initGame() {
     initCamera();
-    initLight();
+    initLights();
 
     createBall(0, 20, 0);    // Creates the ball
+createGround(0, 0, 0,300, 2,200);
+createGround(2, 10, 0, 0 ,200,400)
 
 
     // OrbitControls for camera rotation and zoom
