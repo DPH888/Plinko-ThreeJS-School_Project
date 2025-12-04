@@ -4,6 +4,7 @@ import * as CANNON from "cannon-es";
 import { createBall, ballMesh, ballBody } from "./ball.mjs";
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { createGround } from "./ground.mjs"
+import { createCylinder } from "./cylinder.mjs"
 import { initLights } from "./lights.mjs"
 let cameraController = null; //we use null to say “empty for now” we will asign it later
 
@@ -20,10 +21,10 @@ function initGame() {
     initCamera();
     initLights();
 
-    createBall(0, 20, 0);    // Creates the ball
+    createBall(0, 20, engine.randomInteger(-5,5));    // Creates the ball
 createGround(0, 0, 0,300, 2,200);
 createGround(2, 10, 0, 0 ,200,400)
-
+createCylinder(0, 10, 0,5, 8,64);
 
     // OrbitControls for camera rotation and zoom
     // OrbitControls isnt  directly used  because its just a blueprint (a class)
