@@ -6,8 +6,8 @@ function createCylinder(x, y, z, radius, height, segments) {
     // visible cylinder – THREE.JS
     const geometry = new THREE.CylinderGeometry(radius, radius, height, segments);
     const material = new THREE.MeshStandardMaterial({     //  MeshStandardMaterial is realistic based rendering 
-        color: 0x0088ff,            //orange
-        emissive: 0x0088ff,      // make it glow orange
+        color: 0x0088ff,            //blue
+        emissive: 0x0088ff,      // make the blue glow
     });
     // combines the shape(cannon) + the look(three) does creating the final visible cylinder
     const cylinderMesh = new THREE.Mesh(geometry, material);

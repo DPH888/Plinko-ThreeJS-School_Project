@@ -3,7 +3,7 @@ import * as CANNON from "cannon-es";
 import { engine } from "./engine.mjs";
 
 function createGround(x, y, z, width, height, depth) {
-    // visible ground – THREE.JS
+    // visible ground - THREE.JS
     const geometry = new THREE.BoxGeometry(width, height, depth);
     const material = new THREE.MeshStandardMaterial({     //  MeshStandardMaterial is realistic based rendering 
         color: 0x00aa00,      // green
