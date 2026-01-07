@@ -1,4 +1,3 @@
-import { engine } from "./engine.mjs";
 import * as THREE from "three";
 import * as CANNON from "cannon-es";
 import { createBall, ballMesh, ballBody } from "./ball.mjs";
@@ -6,9 +5,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { createGround } from "./ground.mjs"
 import { createCylinder } from "./cylinder.mjs"
 import { initLights } from "./lights.mjs"
+import{createHoldInPlaceBox} from "./detection_point.mjs"
 let cameraController = null; //we use null to say “empty for now” we will asign it later
-
-//light
 
 // --- Camera ---
 function initCamera() {
@@ -21,10 +19,12 @@ function initGame() {
     initCamera();
     initLights();
 
-    createBall(0, 50, engine.randomInteger(-5,5));    // Creates the ball
+    createBall(0, 60, engine.randomInteger(0,10 ));    // Creates the ball
+    createHoldInPlaceBox(-2, 2, 0,5,2,5,200 );
 createGround(0, 0, 0,50, 2,100);
 createGround(2, 10, 0, 0 ,100,100)
 
+// call this after you create the ball and the barrier
 
 function createCylinderPyramid() {
     const verticalStep = 10;    // vertical distance between rows

@@ -22,7 +22,7 @@ function createBall(x = 0, y = 10, z = 0) {
 
   engine.scene.add(ballMesh);            // Add to the 3D world so the camera can see it
 
-  // physics part – invisible collision & movement
+  // physics part - invisible collision & movement
   const shape = new CANNON.Sphere(2);     // collision sphere with 2 units (same as visual)
  
   const ballPhysicsMaterial = new CANNON.Material(); //new CANNON.Material() creates a PHYSICS material

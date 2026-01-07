@@ -1,13 +1,14 @@
 import * as THREE from "three";
 import * as CANNON from "cannon-es";
-
+import { createBall, ballMesh, ballBody } from "./ball.mjs";
+import{createHoldInPlaceBox, physicalBody} from "./detection_point.mjs"
 let engine = {
     init: initEngine,     // method to initialize the engine
     update: () => { },
     updateTime: 10,      // milliseconds between each `engine.update()` call, smaller = faster game logic updates, larger = slower updates
     scene: null,      //THREE.js scene  //we use null to say “empty for now” we will asign it later
     camera: null,    // THREE.js camera
-    renderer: null,      // WebGL renderer: draws the scene using GPU acceleration
+    renderer: null,      // draws the scene
     world: null,       // Cannon.es physics world
 
     randomInteger(min, max) { // returns a random integer between min and max 
@@ -25,7 +26,7 @@ function initThreeAndPhysics() {
         1000                                 //   maximum render distance:: objects farther than this won't appea
     );
     //Renderer
-    engine.renderer = new THREE.WebGLRenderer({ antialias: true });  // GPU-accelerated canvas
+    engine.renderer = new THREE.WebGLRenderer({ antialias: true });  // allows for the GPU to help with rendering
     engine.renderer.setSize(window.innerWidth, window.innerHeight);   // full window
     document.body.appendChild(engine.renderer.domElement); // // attach canvas to webpage
 
@@ -36,16 +37,18 @@ function initThreeAndPhysics() {
     engine.world = new CANNON.World();
     engine.world.gravity.set(0, -3, 0); // downward gravity
     /*
-     Broadphase is the first step of collision detection.
-     Cannon.es checks for which bodies might collide before doing precise calculations.
-     SAPBroadphase (Sweep and Prune) is efficient for many objects.
+     SAPBroadphase is the first step of collision detection.
+     the broadphase checks for which bodies might collide before doing precise calculations.
+     it improves performence
     */
     engine.world.broadphase = new CANNON.SAPBroadphase(engine.world);
 }
 // Render loop: updates physics and draws the scene every frame
 function renderLoop() {
-    engine.world.step(1 / 60); // physics step at 60 Hz
-    /*
+    engine.world.step(1 / 60);   // physics step at 60 Hz, it regulates how fast or slow everything is mooving
+    //colisionChecker is being called here because world.contacts is only valid after world.step() else it will start before it
+        colisionChecker(ballBody, physicalBody); 
+    /*  
     traverse() goes through every object in the scene 
     object.userData.body -> if the object has a physics body associated
     position.copy() -> copies physics body position to the mesh
@@ -67,11 +70,42 @@ function renderLoop() {
      */
     requestAnimationFrame(renderLoop);
 }
+ let hit = false;
+//Colision checker between 2 objects
+function colisionChecker(bodyA, bodyB) {
+    if (hit == false) {
+        // engine.world.contacts contains all the collisions detected(between 2 bodies)
+        // looping through world.contacts is necessary because Cannon does not provide a direct "are these two bodies colliding" query
+        for (let i = 0; i < engine.world.contacts.length; i++) {
+
+            // it retrieves a single collision record from the physics world
+            // "engine.world.contacts" is a list of all collisions currently detected in this physics step.
+            // "i" specifies spesific collision in the list that is wanted
+            // the variable "contact" now represents that specific collision including the two bodies involved (bodyOne and bodyTwo)
+            const contact = engine.world.contacts[i];
+
+            // contact.bi = first body in the contact pair
+            // contact.bj = second body in the contact pair
+            // cannon-es assigns these arbitrarily meaning bj and bi are not guaranteed to be bi or bj; bi and bj are given to us by cannon es we cannot set out own names
+            const a = contact.bi;
+            const b = contact.bj;
+
+            // Check if this contact involves exactly bj and bi
+            // We check both orders because bi and bj can be assigned in either order by the engine
+            if ((a === bodyA && b === bodyB) || (a === bodyB && b === bodyA)) {
+                hit = true;
+                console.log("bodyA and bodyB collided",createHoldInPlaceBox.score);
+        }
+    }
+} 
+}
+
 //Initializes engine and starts render + update loops
 function initEngine() {
     initThreeAndPhysics();   // creates scene, camera, renderer, physics world
     window.engine = engine;     //This allows the engine’s variables to be used in other files or the console.”
     renderLoop();           // start visual render loop 
+
     /*
  * Start the logic update loop
  * setInterval calls engine.update() every updateTime milliseconds
