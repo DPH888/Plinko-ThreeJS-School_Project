@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import * as CANNON from "cannon-es";
+import { engine } from "./engine.mjs";
 import { createBall, ballMesh, ballBody } from "./ball.mjs";
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { createGround } from "./ground.mjs"
@@ -13,7 +14,9 @@ function initCamera() {
     engine.camera.position.set(0, 20, 80); // starting view
     engine.camera.lookAt(0, 0, 0);         // look at scene origin
 }
+ engine.update = () => {
 
+ }
 // --- Game ---
 function initGame() {
     initCamera();
@@ -25,7 +28,6 @@ createGround(0, 0, 0,50, 2,100);
 createGround(2, 10, 0, 0 ,100,100)
 
 // call this after you create the ball and the barrier
-
 function createCylinderPyramid() {
     const verticalStep = 10;    // vertical distance between rows
     const horizontalStep = 10;   // horizontal spacing between cylinders
