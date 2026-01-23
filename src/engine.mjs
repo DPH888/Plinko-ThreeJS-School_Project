@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import * as CANNON from "cannon-es";
 import { createBall, ballMesh, ballBody } from "./ball.mjs";
-import{createHoldInPlaceBox, physicalBody,GlobalScore} from "./detection_point.mjs"
+import{createDetectionPoint, physicalBody,GlobalScore} from "./detection_point.mjs"
 let engine = {
     init: initEngine,     // method to initialize the engine
     update: () => {},
@@ -94,7 +94,7 @@ function colisionChecker(bodyA, bodyB) {
             // We check both orders because bi and bj can be assigned in either order by the engine
             if ((a === bodyA && b === bodyB) || (a === bodyB && b === bodyA)) {
                 hit = true;
-                console.log("bodyA and bodyB collided",GlobalScore);
+                console.log("you got",GlobalScore);
         }
     }
 } 
