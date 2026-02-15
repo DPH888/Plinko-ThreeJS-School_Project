@@ -1,30 +1,25 @@
 import * as THREE from "three";
 import * as CANNON from "cannon-es";
 import { createBall, ballMesh, ballBody } from "./ball.mjs";
-import{createDetectionPoint, physicalBody,GlobalScore} from "./detection_point.mjs"
+import { createDetectionPoint, physicalBody, GlobalScore, detectionBodies } from "./detection_point.mjs"
 let engine = {
     init: initEngine,     // method to initialize the engine
-    update: () => {},
+    update: () => { },
     updateTime: 10,      // milliseconds between each `engine.update()` call, smaller = faster game logic updates, larger = slower updates
-    scene: null,      //THREE.js scene  //we use null to say “empty for now” we will asign it later
+    scene: null,      //THREE.js scene  //we use null to say "empty for now" we will asign it later
     camera: null,    // THREE.js camera
     renderer: null,      // draws the scene
     world: null,       // Cannon.es physics world
 
     randomInteger(min, max) { // returns a random integer between min and max 
-        return Math.floor(Math.random() * (max - min + 1)) + min;
+        return Math.random() * (max - min + 1) + min; //the number is not rounded
     }
 };
 // Sets up Three.js scene, camera, renderer, and Cannon.es physics
 function initThreeAndPhysics() {
     engine.scene = new THREE.Scene(); // main container for all 3D objects
 
-    engine.camera = new THREE.PerspectiveCamera(
-        75,                                         // FOV in degrees
-        window.innerWidth / window.innerHeight,         // aspect ratio of browser window
-        0.1,                                //  minimum render distance:: objects closer than this won't appear
-        1000                                 //   maximum render distance:: objects farther than this won't appea
-    );
+    engine.camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 1, 30000);
     //Renderer
     engine.renderer = new THREE.WebGLRenderer({ antialias: true });  // allows for the GPU to help with rendering
     engine.renderer.setSize(window.innerWidth, window.innerHeight);   // full window
@@ -42,12 +37,40 @@ function initThreeAndPhysics() {
      it improves performence
     */
     engine.world.broadphase = new CANNON.SAPBroadphase(engine.world);
+    let materialArray = [];
+    //loading the 6 images for each side of the cube
+    let texture_ft = new THREE.TextureLoader().load('images/arid_ft.jpg');
+    let texture_bk = new THREE.TextureLoader().load('images/arid_bk.jpg');
+    let texture_up = new THREE.TextureLoader().load('images/arid_up.jpg');
+    let texture_dn = new THREE.TextureLoader().load('images/arid_dn.jpg');
+    let texture_rt = new THREE.TextureLoader().load('images/arid_rt.jpg');
+    let texture_lf = new THREE.TextureLoader().load('images/arid_lf.jpg');
+    // creating a material for each image and push into array
+    materialArray.push(new THREE.MeshBasicMaterial({ map: texture_ft }));
+    materialArray.push(new THREE.MeshBasicMaterial({ map: texture_bk }));
+    materialArray.push(new THREE.MeshBasicMaterial({ map: texture_up }));
+    materialArray.push(new THREE.MeshBasicMaterial({ map: texture_dn }));
+    materialArray.push(new THREE.MeshBasicMaterial({ map: texture_rt }));
+    materialArray.push(new THREE.MeshBasicMaterial({ map: texture_lf }));
+    for (let i = 0; i < 6; i++){
+            //making the textures render on the inside of the cube
+        materialArray[i].side = THREE.BackSide;
+    // creating the cube geometry (this will surround the whole scene)
+    let skyboxGeo = new THREE.BoxGeometry(10000, 10000, 10000);
+    // creatign the skybox mesh using the big cube geometry and the 6 different materials
+    let skybox = new THREE.Mesh(skyboxGeo, materialArray);
+    // Add skybox to the scene so it becomes visible
+    engine.scene.add(skybox);
+ }
 }
+
 // Render loop: updates physics and draws the scene every frame
 function renderLoop() {
     engine.world.step(1 / 60);   // physics step at 60 Hz, it regulates how fast or slow everything is mooving
     //colisionChecker is being called here because world.contacts is only valid after world.step() else it will start before it
-        colisionChecker(ballBody, physicalBody); 
+    for (let i = 0; i < detectionBodies.length; i++) {
+        colisionChecker(ballBody, detectionBodies[i], GlobalScore[i]);
+    }
     /*  
     traverse() goes through every object in the scene 
     object.userData.body -> if the object has a physics body associated
@@ -70,40 +93,37 @@ function renderLoop() {
      */
     requestAnimationFrame(renderLoop);
 }
- let hit = false;
-//Colision checker between 2 objects
-function colisionChecker(bodyA, bodyB) {
-    if (hit == false) {
-        // engine.world.contacts contains all the collisions detected(between 2 bodies)
-        // looping through world.contacts is necessary because Cannon does not provide a direct "are these two bodies colliding" query
-        for (let i = 0; i < engine.world.contacts.length; i++) {
+let hit = false; // prevents repeated triggers after first collision
 
-            // it retrieves a single collision record from the physics world
+function colisionChecker(bodyA, bodyB, score = null) {
+    // engine.world.contacts contains all the collisions detected(between 2 bodies)
+    // looping through world.contacts is necessary because Cannon does not provide a direct "are these two bodies colliding" query
+    for (let i = 0; i < engine.world.contacts.length; i++) {
+        // it retrieves a single collision record from the physics world
             // "engine.world.contacts" is a list of all collisions currently detected in this physics step.
             // "i" specifies spesific collision in the list that is wanted
             // the variable "contact" now represents that specific collision including the two bodies involved (bodyOne and bodyTwo)
-            const contact = engine.world.contacts[i];
-
-            // contact.bi = first body in the contact pair
+        const contact = engine.world.contacts[i];
+         // contact.bi = first body in the contact pair
             // contact.bj = second body in the contact pair
             // cannon-es assigns these arbitrarily meaning bj and bi are not guaranteed to be bi or bj; bi and bj are given to us by cannon es we cannot set out own names
-            const a = contact.bi;
-            const b = contact.bj;
-
-            // Check if this contact involves exactly bj and bi
-            // We check both orders because bi and bj can be assigned in either order by the engine
-            if ((a === bodyA && b === bodyB) || (a === bodyB && b === bodyA)) {
-                hit = true;
-                console.log("you got",GlobalScore);
+            
+        const a = contact.bi;
+        const b = contact.bj;
+if(hit==false){
+        // Check if this contact involves exactly bj and bi
+        // We check both orders because bi and bj can be assigned in either order by the engine
+        if ((a === bodyA && b === bodyB) || (a === bodyB && b === bodyA)) {
+            hit = true
+        console.log("You got", score);
         }
+                    }
     }
-} 
 }
-
 //Initializes engine and starts render + update loops
 function initEngine() {
     initThreeAndPhysics();   // creates scene, camera, renderer, physics world
-    window.engine = engine;     //This allows the engine’s variables to be used in other files or the console.”
+    window.engine = engine;     //This allows the engine's variables to be used in other files or the console.
     renderLoop();           // start visual render loop 
 
     /*
@@ -114,4 +134,4 @@ function initEngine() {
     setInterval(() => engine.update(), engine.updateTime);
 }
 
-export { engine };
+export { engine, colisionChecker };

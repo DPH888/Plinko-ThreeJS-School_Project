@@ -2,11 +2,13 @@ import * as THREE from "three";
 import * as CANNON from "cannon-es";
 import { engine } from "./engine.mjs";
 let visualBody, physicalBody;
-function createGround(x, y, z, width, height, depth) {
+function createGround(x, y, z, width, height, depth,transparency) {
     // visible ground - THREE.JS
     const geometry = new THREE.BoxGeometry(width, height, depth);
     const material = new THREE.MeshStandardMaterial({     //  MeshStandardMaterial is realistic based rendering 
         color: 0x00aa00,      // green
+        transparent: transparency,
+        opacity: 0
     });
 
     // combines the shape(cannon) + the look(three) does creating the final visible ground
@@ -17,10 +19,10 @@ function createGround(x, y, z, width, height, depth) {
 
     engine.scene.add(visualBody); // add to the 3D world so the camera can see it
 
-    /*PHYSICS – CANNON
+    /*PHYSICS - CANNON
         why using Vec3 and dividing by 2
        CANNON.Box() expects the distance from center to edge, so the full size must be divided by 2
-       CANNON.Box() ONLY accepts a CANNON.Vec3 — nothing else works
+       CANNON.Box() ONLY accepts a CANNON.Vec3 - nothing else works
     */
     physicalBody = new CANNON.Box(
         new CANNON.Vec3(width / 2, height / 2, depth / 2)

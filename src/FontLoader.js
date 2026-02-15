@@ -1,1 +1,0 @@
-//Facetype.js ; TextGeometry ; FontLoader
