@@ -2,36 +2,68 @@ import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import * as THREE from 'three';
 import { engine } from "./engine.mjs";
-
-// importing a typeface/font (build in three.js font)
+import * as ScoreModule from "./detection_point.mjs";
 import TypeOfFont from 'three/examples/fonts/helvetiker_regular.typeface.json';
 
+let scoreMesh;
+let font;
+let lastScore = -1;
+
 function createwords() {
-  const loader = new FontLoader();// initialize the font loader
+  const loader = new FontLoader();
+  font = loader.parse(TypeOfFont);
 
-    // .parse() turns the raw JSON into a real Three.js Font object
-    // TextGeometry needs this parsed font, because it can't use raw JSON directly.
-  const font = loader.parse(TypeOfFont);
-
-  const geometry = new TextGeometry('Score :', {
-    font: font,               // loading the font
-    size: 8,
-    depth:5,
-    curveSegments: 20,   //numbers of points on the curves(the more, it looks more smooth)
-    bevelEnabled: true,  //enabaling bevel chamfered edges
-    bevelThickness: 1,  //the depth of the bevel
-    bevelSize: .5,     //the distance from the shape outline that the bevel extends
-    bevelSegments: 10  //the number of bevel layers
-  });
   const material = new THREE.MeshLambertMaterial({ color: 0xff0000 });
-  const mesh = new THREE.Mesh(geometry, material);
 
-mesh.position.y= 35
-mesh.position.z= 35
+  scoreMesh = new THREE.Mesh(
+    new TextGeometry("Score: 0", {
+      font: font,
+      size: 8,
+      depth: 5,             // this makes it 3D
+      curveSegments: 20,
+      bevelEnabled: true,  // rounds edges
+      bevelThickness: 1,
+      bevelSize: .5,
+      bevelSegments: 10
+    }),
+    material
+  );
 
-mesh.rotation.z = Math.PI /0.5
-mesh.rotation.y = Math.PI /0.1335; 
-  engine.scene.add(mesh);
+  scoreMesh.position.y = 60;
+  scoreMesh.position.z = -15  ;
+
+  scoreMesh.rotation.z = Math.PI / 0.5;
+  scoreMesh.rotation.y = Math.PI / 0.1335;  //rotates the score so its not upside down
+
+  engine.scene.add(scoreMesh);
+  // Hook the update function into Three.js render loop
+  // onBeforeRender runs before every frame withought it "updateScoreDisplay" never will execute
+  engine.scene.onBeforeRender = updateScoreDisplay;
+}
+
+function updateScoreDisplay() {
+  const currentScore = ScoreModule.TotalScore;
+// only recreate geometry if the score has changed
+  if (currentScore !== lastScore) {
+// this frees GPU memory from the old geometry
+    scoreMesh.geometry.dispose();
+// creates a new TextGeometry with the updated score value
+    scoreMesh.geometry = new TextGeometry(
+      `Score: ${currentScore}`,
+      {
+        font: font,
+        size: 8,
+        depth: 5,
+        curveSegments: 20,
+        bevelEnabled: true,
+        bevelThickness: 1,
+        bevelSize: .5,
+        bevelSegments: 10
+      }
+    );
+// syncs the score so we don't recreate geometry unnecessarily
+    lastScore = currentScore;
+  }
 }
 
 export { createwords };

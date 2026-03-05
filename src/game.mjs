@@ -8,12 +8,12 @@ import { createCylinder } from "./cylinder.mjs"
 import { initLights } from "./lights.mjs"
 import { createDetectionPoint, physicalBody } from "./detection_point.mjs"
 import { createwords } from "./font.mjs"
-let cameraController = null; //we use null to say “empty for now” we will asign it later
+let cameraController = null; 
 
 // camera initialisation
 function initCamera() {
-    engine.camera.position.set(0, 20, 80); // starting view
-    engine.camera.lookAt(0, 0, 0);         // look at scene origin
+    engine.camera.position.set(-180, 70, 0); // starting view
+   
 }
 // the initialisation of most base things for the game
 function initGame() {
@@ -27,10 +27,10 @@ function initGame() {
     createDetectionPoint(-2, 2, 10, 5, 2, 5, 300);
     createDetectionPoint(-2, 2, 30, 5, 2, 5, 100);
 
-    createBall(0, 60, engine.randomInteger(0, 15));    // Creates the ball
+  
 
-    createGround(-13, 0, 0, 30, 2, 100);
-    createGround(3, 29, 0, 2, 60, 100)
+    createGround(-8, 0, 8, 20, 2, 70);
+    createGround(3, 29, 8, 2, 60, 70)
 
     createGround(-1, 2, 5, 7, 6, 1)
     createGround(-1, 2, 15, 7, 6, 1)
@@ -75,7 +75,7 @@ function createCylinderPyramid() {
             // cylinderInRowPosition 0 -> z = -10 + 0x10 = -10
             // cylinderInRowPosition 1 -> z = -10 + 1x10 =   0 etc.
             const z = rowOffset + cylinderInRowPosition * horizontalStep;   
-            createCylinder(-0.01, y, z, 2, 10, 64); // create cylinder
+            createCylinder(-1, y, z, 2, 8, 64); // create cylinder
         }
     }
 }
@@ -88,7 +88,7 @@ function createCylinderPyramid() {
     cameraController.dampingFactor = 0.1;        //sensitivity of the camera rotaion
     cameraController.enablePan = false;          // disable right-click moovements of camera(camera being able to move off its preset axis)
     cameraController.minDistance = 70;
-    cameraController.maxDistance = 150;          // limits zoom out
+    cameraController.maxDistance = 250;          // limits zoom out
 
     engine.update = () => { 
         // cameraController.target is the point where the camera rotates and zooms around

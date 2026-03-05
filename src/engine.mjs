@@ -1,7 +1,9 @@
 import * as THREE from "three";
 import * as CANNON from "cannon-es";
-import { createBall, ballMesh, ballBody } from "./ball.mjs";
-import { createDetectionPoint, physicalBody, GlobalScore, detectionBodies } from "./detection_point.mjs"
+import { createBall, ballMesh, ballBody, respawnAnimation, stopAnimation, resetBall } from "./ball.mjs";
+import { detectionBodies, addToTotalScore, TotalScore } from "./detection_point.mjs";
+import { createDetectionPoint, physicalBody } from "./detection_point.mjs"
+
 let engine = {
     init: initEngine,     // method to initialize the engine
     update: () => { },
@@ -15,11 +17,12 @@ let engine = {
         return Math.random() * (max - min + 1) + min; //the number is not rounded
     }
 };
-// Sets up Three.js scene, camera, renderer, and Cannon.es physics
+
+// sets up Three.js scene, camera, renderer, and Cannon.es physics
 function initThreeAndPhysics() {
     engine.scene = new THREE.Scene(); // main container for all 3D objects
 
-    engine.camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 1, 30000);
+    engine.camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 1, 30000);
     //Renderer
     engine.renderer = new THREE.WebGLRenderer({ antialias: true });  // allows for the GPU to help with rendering
     engine.renderer.setSize(window.innerWidth, window.innerHeight);   // full window
@@ -37,46 +40,89 @@ function initThreeAndPhysics() {
      it improves performence
     */
     engine.world.broadphase = new CANNON.SAPBroadphase(engine.world);
+
+    // skybox code (unchanged from original)
     let materialArray = [];
-    //loading the 6 images for each side of the cube
-    let texture_ft = new THREE.TextureLoader().load('images/arid_ft.jpg');
-    let texture_bk = new THREE.TextureLoader().load('images/arid_bk.jpg');
-    let texture_up = new THREE.TextureLoader().load('images/arid_up.jpg');
-    let texture_dn = new THREE.TextureLoader().load('images/arid_dn.jpg');
-    let texture_rt = new THREE.TextureLoader().load('images/arid_rt.jpg');
-    let texture_lf = new THREE.TextureLoader().load('images/arid_lf.jpg');
-    // creating a material for each image and push into array
+    let texture_ft = new THREE.TextureLoader().load('images/zeus_ft.jpg');
+    let texture_bk = new THREE.TextureLoader().load('images/zeus_bk.jpg');
+    let texture_up = new THREE.TextureLoader().load('images/zeus_up.jpg');
+    let texture_dn = new THREE.TextureLoader().load('images/zeus_dn.jpg');
+    let texture_rt = new THREE.TextureLoader().load('images/zeus_rt.jpg');
+    let texture_lf = new THREE.TextureLoader().load('images/zeus_lf.jpg');
     materialArray.push(new THREE.MeshBasicMaterial({ map: texture_ft }));
     materialArray.push(new THREE.MeshBasicMaterial({ map: texture_bk }));
     materialArray.push(new THREE.MeshBasicMaterial({ map: texture_up }));
     materialArray.push(new THREE.MeshBasicMaterial({ map: texture_dn }));
     materialArray.push(new THREE.MeshBasicMaterial({ map: texture_rt }));
     materialArray.push(new THREE.MeshBasicMaterial({ map: texture_lf }));
-    for (let i = 0; i < 6; i++){
-            //making the textures render on the inside of the cube
+    for (let i = 0; i < 6; i++) {
         materialArray[i].side = THREE.BackSide;
-    // creating the cube geometry (this will surround the whole scene)
+    }
     let skyboxGeo = new THREE.BoxGeometry(10000, 10000, 10000);
-    // creatign the skybox mesh using the big cube geometry and the 6 different materials
     let skybox = new THREE.Mesh(skyboxGeo, materialArray);
-    // Add skybox to the scene so it becomes visible
     engine.scene.add(skybox);
- }
+}
+let canTheGameReset=false;
+function colisionChecker(bodyA, bodyB, score = null) {
+    // engine.world.contacts contains all the collisions detected(between 2 bodies)
+    // looping through world.contacts is necessary because Cannon does not provide a direct "are these two bodies colliding" query
+    for (let i = 0; i < engine.world.contacts.length; i++) {
+        // it retrieves a single collision record from the physics world
+        // "engine.world.contacts" is a list of all collisions currently detected in this physics step.
+        // "i" specifies spesific collision in the list that is wanted
+        // the variable "contact" now represents that specific collision including the two bodies involved (bodyOne and bodyTwo)
+        const contact = engine.world.contacts[i];
+        // contact.bi = first body in the contact pair
+        // contact.bj = second body in the contact pair
+        // cannon-es assigns these arbitrarily meaning bj and bi are not guaranteed to be bi or bj; bi and bj are given to us by cannon es we cannot set out own names
+
+        const a = contact.bi;
+        const b = contact.bj;
+
+        // Check if this contact involves exactly bodyA and bodyB
+        // We check both orders because bi and bj can be assigned in either order by the engine
+        //COLLISION CHECKER WORKS BY CHECKING COLLISIONS OF BALL AND OBJECT WITH USERDATA(DETECTION POINTS😭)
+        if (a === bodyA && b.userData) {
+            if (b.userData.hit === false) {
+                b.userData.hit = true;
+                addToTotalScore(b.userData.score);
+                console.log("You got", b.userData.score);
+                console.log("Total Score:", TotalScore);
+                canTheGameReset=true
+            }
+        }
+        else if (b === bodyA && a.userData) {
+            if (a.userData.hit === false) {
+                a.userData.hit = true;
+                addToTotalScore(a.userData.score);
+                console.log("You got", a.userData.score);
+                console.log("Total Score:", TotalScore);
+                canTheGameReset=true
+            }
+        }
+    }
 }
 
-// Render loop: updates physics and draws the scene every frame
 function renderLoop() {
     engine.world.step(1 / 60);   // physics step at 60 Hz, it regulates how fast or slow everything is mooving
-    //colisionChecker is being called here because world.contacts is only valid after world.step() else it will start before it
-    for (let i = 0; i < detectionBodies.length; i++) {
-        colisionChecker(ballBody, detectionBodies[i], GlobalScore[i]);
+    colisionChecker(ballBody);
+    respawnAnimation()
+window.addEventListener("keydown", event => {  //keydown is an already exsting event for when key is pressed down
+//1. The browser receives system(keyboard) event.    
+//2. The browser creates a JavaScript event object.
+//3. That event object contains properties like: "key,code, etc." if .key name is changed in the code to somehting else the browser wont know
+    if (event.code === "Enter") {
+        resetBall();
     }
+    if (event.code === "Space") {
+        stopAnimation();
+    }
+});
     /*  
-    traverse() goes through every object in the scene 
+    traverse() is a built-in Three.js method, it recursively visits EVERY object in the entire 3D scene (ball, ground, cylinders, etc.) to sync the visual meshes with the physics bodies every frame
     object.userData.body -> if the object has a physics body associated
     position.copy() -> copies physics body position to the mesh
     quaternion.copy()-> copies physics body rotation to the mesh
-    This keeps the 3D visual representation exactly aligned with physics simulation.
    */
     engine.scene.traverse(object => {
         if (object.userData.body) {
@@ -93,33 +139,7 @@ function renderLoop() {
      */
     requestAnimationFrame(renderLoop);
 }
-let hit = false; // prevents repeated triggers after first collision
 
-function colisionChecker(bodyA, bodyB, score = null) {
-    // engine.world.contacts contains all the collisions detected(between 2 bodies)
-    // looping through world.contacts is necessary because Cannon does not provide a direct "are these two bodies colliding" query
-    for (let i = 0; i < engine.world.contacts.length; i++) {
-        // it retrieves a single collision record from the physics world
-            // "engine.world.contacts" is a list of all collisions currently detected in this physics step.
-            // "i" specifies spesific collision in the list that is wanted
-            // the variable "contact" now represents that specific collision including the two bodies involved (bodyOne and bodyTwo)
-        const contact = engine.world.contacts[i];
-         // contact.bi = first body in the contact pair
-            // contact.bj = second body in the contact pair
-            // cannon-es assigns these arbitrarily meaning bj and bi are not guaranteed to be bi or bj; bi and bj are given to us by cannon es we cannot set out own names
-            
-        const a = contact.bi;
-        const b = contact.bj;
-if(hit==false){
-        // Check if this contact involves exactly bj and bi
-        // We check both orders because bi and bj can be assigned in either order by the engine
-        if ((a === bodyA && b === bodyB) || (a === bodyB && b === bodyA)) {
-            hit = true
-        console.log("You got", score);
-        }
-                    }
-    }
-}
 //Initializes engine and starts render + update loops
 function initEngine() {
     initThreeAndPhysics();   // creates scene, camera, renderer, physics world
