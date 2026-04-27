@@ -2,18 +2,15 @@ import * as THREE from "three";
 import * as CANNON from "cannon-es";
 import { engine } from "./engine.mjs";
 let visualBody, physicalBody;
-function createGround(x, y, z, width, height, depth,transparency) {
+function createGround(x, y, z, width, height, depth, transparency) {
     // visible ground - THREE.JS
     const geometry = new THREE.BoxGeometry(width, height, depth);
-    const material = new THREE.MeshStandardMaterial({     //  MeshStandardMaterial is realistic based rendering 
+    const material = new THREE.MeshStandardMaterial({     // MeshStandardMaterial is a preset that comes with Three.js, it simulates real-world VISUAL materials
         color: 0x00aa00,      // green
         transparent: transparency,
         opacity: 0
     });
-
-    // combines the shape(cannon) + the look(three) does creating the final visible ground
-     visualBody = new THREE.Mesh(geometry, material);
-
+    visualBody = new THREE.Mesh(geometry, material);
     visualBody.position.set(x, y, z); // starting position 
     visualBody.receiveShadow = true;
 
@@ -35,8 +32,8 @@ function createGround(x, y, z, width, height, depth,transparency) {
 
     engine.world.addBody(groundBody);     // add to physics simulation (gravity now affects it)
 
-  // every Three.js object has a small hidden storage space called .userData
-  // we put the physics body inside this lable so the engine can find it later and unite the physical and visual ball
+    // every Three.js object has a small hidden storage space called .userData
+    // we put the physics body inside this lable so the engine can find it later and unite the physical and visual ball
     visualBody.userData.body = groundBody;
 }
 

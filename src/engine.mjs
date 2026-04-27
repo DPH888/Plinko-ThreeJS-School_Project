@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import * as CANNON from "cannon-es";
-import { createBall, ballMesh, ballBody, respawnAnimation, stopAnimation, resetBall } from "./ball.mjs";
+import { createBall, ballMesh, ballBody, respawnAnimation, stopAnimation, resetBall} from "./ball.mjs";
 import { detectionBodies, addToTotalScore, TotalScore } from "./detection_point.mjs";
 import { createDetectionPoint, physicalBody } from "./detection_point.mjs"
 
@@ -63,6 +63,8 @@ function initThreeAndPhysics() {
     engine.scene.add(skybox);
 }
 let canTheGameReset=false;
+let canThePlayerReset=false;
+
 function colisionChecker(bodyA, bodyB, score = null) {
     // engine.world.contacts contains all the collisions detected(between 2 bodies)
     // looping through world.contacts is necessary because Cannon does not provide a direct "are these two bodies colliding" query
@@ -106,7 +108,12 @@ function colisionChecker(bodyA, bodyB, score = null) {
 function renderLoop() {
     engine.world.step(1 / 60);   // physics step at 60 Hz, it regulates how fast or slow everything is mooving
     colisionChecker(ballBody);
+   // if(physicalBody.userData.hit==true ){
     respawnAnimation()
+   // }
+
+//console.log(canThePlayerReset)
+  
 window.addEventListener("keydown", event => {  //keydown is an already exsting event for when key is pressed down
 //1. The browser receives system(keyboard) event.    
 //2. The browser creates a JavaScript event object.
@@ -144,7 +151,7 @@ window.addEventListener("keydown", event => {  //keydown is an already exsting e
 function initEngine() {
     initThreeAndPhysics();   // creates scene, camera, renderer, physics world
     window.engine = engine;     //This allows the engine's variables to be used in other files or the console.
-    renderLoop();           // start visual render loop 
+    renderLoop();           // start visual render loop z
 
     /*
  * Start the logic update loop

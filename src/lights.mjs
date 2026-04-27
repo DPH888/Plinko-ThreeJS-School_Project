@@ -13,7 +13,6 @@ function initLights() {
     light.shadow.camera.near = 1;   // defines the closest distance from which shadows start to being rendered
     light.shadow.camera.far = 120;   //defines the exact volume in which shadows are calculated
 
-
     // these four values define a rectangle on the ground, everything outside this rectangle gets NO shadows at all
     light.shadow.camera.left = -80;
     light.shadow.camera.right = 80;

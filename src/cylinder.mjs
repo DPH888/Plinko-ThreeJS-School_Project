@@ -3,13 +3,11 @@ import * as CANNON from "cannon-es";
 import { engine } from "./engine.mjs";
 
 function createCylinder(x, y, z, radius, height, segments) {
-    // visible cylinder – THREE.JS
     const geometry = new THREE.CylinderGeometry(radius, radius, height, segments);
-    const material = new THREE.MeshStandardMaterial({     //  MeshStandardMaterial is realistic based rendering 
-        color: 0x0088ff,            //blue
+    const material = new THREE.MeshStandardMaterial({     // MeshStandardMaterial is a preset that comes with Three.js, it simulates real-world VISUAL materials
+        color: 0x0088ff,           //blue
         emissive: 0x0088ff,      // make the blue glow
     });
-    // combines the shape(cannon) + the look(three) does creating the final visible cylinder
     const cylinderMesh = new THREE.Mesh(geometry, material);
     cylinderMesh.rotation.z = Math.PI / 2;  // rotate 90° around Z-axis for the THREE.JS(visual)
     cylinderMesh.position.set(x, y, z); // starting position 
@@ -17,7 +15,7 @@ function createCylinder(x, y, z, radius, height, segments) {
 
     engine.scene.add(cylinderMesh); // add to the 3D world so the camera can see it
 
-    /*PHYSICS – CANNON
+    /*PHYSICS - CANNON
      why Vec3 and deviding by 2 is not in usage (unlike box):
      CANNON.Cylinder wants full radius + full height
      CANNON.Box() wants distance from center to edge, that's why Box needs /2 + Vec3

@@ -10,12 +10,11 @@ import { createDetectionPoint, physicalBody } from "./detection_point.mjs"
 import { createwords } from "./font.mjs"
 let cameraController = null; 
 
-// camera initialisation
+
 function initCamera() {
     engine.camera.position.set(-180, 70, 0); // starting view
    
 }
-// the initialisation of most base things for the game
 function initGame() {
     initCamera();
     initLights();

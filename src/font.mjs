@@ -30,7 +30,7 @@ function createwords() {
   );
 
   scoreMesh.position.y = 60;
-  scoreMesh.position.z = -15  ;
+  scoreMesh.position.z = -15;
 
   scoreMesh.rotation.z = Math.PI / 0.5;
   scoreMesh.rotation.y = Math.PI / 0.1335;  //rotates the score so its not upside down
@@ -43,13 +43,13 @@ function createwords() {
 
 function updateScoreDisplay() {
   const currentScore = ScoreModule.TotalScore;
-// only recreate geometry if the score has changed
+  // only recreate geometry if the score has changed
   if (currentScore !== lastScore) {
-// this frees GPU memory from the old geometry
+    // this frees GPU memory from the old geometry
     scoreMesh.geometry.dispose();
-// creates a new TextGeometry with the updated score value
+    // creates a new TextGeometry with the updated score value
     scoreMesh.geometry = new TextGeometry(
-      `Score: ${currentScore}`,
+      "Score: " + currentScore, //this is the score that's being displayed to the player we have the text and next to it we say the current score
       {
         font: font,
         size: 8,
@@ -61,7 +61,7 @@ function updateScoreDisplay() {
         bevelSegments: 10
       }
     );
-// syncs the score so we don't recreate geometry unnecessarily
+    // syncs the score so we don't recreate geometry unnecessarily
     lastScore = currentScore;
   }
 }
