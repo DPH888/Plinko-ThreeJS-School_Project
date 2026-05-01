@@ -9,7 +9,6 @@ function createCylinder(x, y, z, radius, height, segments) {
         emissive: 0x0088ff,      // make the blue glow
     });
     const cylinderMesh = new THREE.Mesh(geometry, material);
-    cylinderMesh.rotation.z = Math.PI / 2;  // rotate 90° around Z-axis for the THREE.JS(visual)
     cylinderMesh.position.set(x, y, z); // starting position 
     cylinderMesh.receiveShadow = true;
 

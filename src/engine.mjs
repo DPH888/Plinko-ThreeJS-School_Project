@@ -35,13 +35,13 @@ function initThreeAndPhysics() {
     engine.world = new CANNON.World();
     engine.world.gravity.set(0, -3, 0); // downward gravity
     /*
-     SAPBroadphase is the first step of collision detection.
+     SAPBroadphase(algorithm) is the first step of collision detection.
      the broadphase checks for which bodies might collide before doing precise calculations.
      it improves performence
     */
     engine.world.broadphase = new CANNON.SAPBroadphase(engine.world);
 
-    // skybox code (unchanged from original)
+    // skybox code
     let materialArray = [];
     let texture_ft = new THREE.TextureLoader().load('images/zeus_ft.jpg');
     let texture_bk = new THREE.TextureLoader().load('images/zeus_bk.jpg');

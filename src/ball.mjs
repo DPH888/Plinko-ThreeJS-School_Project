@@ -42,7 +42,7 @@ let isBallCreated = false;
 let animationRunning = true;
 let animationPhase = - 2;
 
-const halfDistance = 9.90;
+const halfDistance = 9.70;
 const phaseSpeed = 0.01;
 function respawnAnimation() {
 
@@ -70,6 +70,19 @@ function resetBall() {
   animationPhase = -2;
   animationRunning = true;
 
+  if (ballBody) {// This is important to prevent immediate re-collision with detection zones and moves back ball to starting position
+    ballBody.position.set(0, 50, 0);
+    ballBody.velocity.set(0, 0, 0);
+  }
+
+  // Reset all detection zones so they can award points again
+  // Loop through all physics bodies manually
+  for (let i = 0; i < engine.world.bodies.length; i++) {
+    const body = engine.world.bodies[i];
+    if (body.userData && body.userData.hit !== undefined) { // checks if object has userData.hit
+      body.userData.hit = false;
+    }
+  }
 }
 function stopAnimation() {
   animationRunning = false;
